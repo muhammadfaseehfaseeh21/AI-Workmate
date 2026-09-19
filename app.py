@@ -77,8 +77,9 @@ st.markdown(
     section[data-testid="stSidebar"] .stMarkdown p {
         color: white !important;
     }
-    [data-testid="stAlert"] p {
-        color: #0f172a !important;
+    section[data-testid="stSidebar"] [data-testid="stAlert"] p {
+        color: white !important;
+        font-weight: 600;
     }
     section[data-testid="stSidebar"] input {
         color: #0f172a !important;
