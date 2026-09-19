@@ -18,19 +18,55 @@ st.set_page_config(
 )
 
 # =========================================================
-# CUSTOM CSS (colorful theme)
+# THEMES
+# (main color, second color, accent color, sidebar top, sidebar bottom)
+# =========================================================
+THEMES = {
+    "🔵 Blue & Purple (Default)": ("#2563eb", "#7c3aed", "#db2777", "#172554", "#4c1d95"),
+    "🟢 Ocean Green": ("#059669", "#0891b2", "#2563eb", "#064e3b", "#0e7490"),
+    "🟠 Sunset Orange": ("#ea580c", "#db2777", "#7c3aed", "#7c2d12", "#9d174d"),
+    "🌸 Rose Pink": ("#e11d48", "#db2777", "#9333ea", "#881337", "#701a75"),
+    "🌙 Dark Night": ("#6366f1", "#8b5cf6", "#06b6d4", "#0f172a", "#1e1b4b"),
+    "🎨 Custom (choose your own)": None,
+}
+
+st.sidebar.markdown("## 🎨 Theme")
+theme_name = st.sidebar.selectbox("Choose a theme", list(THEMES))
+
+if THEMES[theme_name] is None:
+    c1 = st.sidebar.color_picker("Main color", "#2563eb")
+    c2 = st.sidebar.color_picker("Second color", "#7c3aed")
+    c3 = st.sidebar.color_picker("Accent color", "#db2777")
+    s1 = st.sidebar.color_picker("Sidebar top", "#172554")
+    s2 = st.sidebar.color_picker("Sidebar bottom", "#4c1d95")
+else:
+    c1, c2, c3, s1, s2 = THEMES[theme_name]
+
+# Theme colors as CSS variables
+st.markdown(
+    f"<style>:root{{--c1:{c1};--c2:{c2};--c3:{c3};--s1:{s1};--s2:{s2};}}</style>",
+    unsafe_allow_html=True,
+)
+
+# =========================================================
+# CUSTOM CSS (uses the theme variables above)
 # =========================================================
 st.markdown(
     """
 <style>
     /* Main background */
     .stApp {
-        background: linear-gradient(135deg, #eef2ff 0%, #f8f9ff 45%, #ecfeff 100%);
+        background: linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--c1) 10%, white) 0%,
+            #f8f9ff 50%,
+            color-mix(in srgb, var(--c2) 10%, white) 100%
+        );
     }
 
     /* Sidebar background */
     section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #172554 0%, #312e81 50%, #4c1d95 100%);
+        background: linear-gradient(180deg, var(--s1) 0%, var(--s2) 100%);
     }
 
     /* Sidebar text: white, but NOT inside inputs or alert boxes */
@@ -41,8 +77,8 @@ st.markdown(
     section[data-testid="stSidebar"] .stMarkdown p {
         color: white !important;
     }
-    section[data-testid="stSidebar"] [data-testid="stAlert"] p {
-        color: #1e3a8a !important;
+    [data-testid="stAlert"] p {
+        color: #0f172a !important;
     }
     section[data-testid="stSidebar"] input {
         color: #0f172a !important;
@@ -54,7 +90,7 @@ st.markdown(
         font-weight: 800;
         text-align: center;
         margin-bottom: 5px;
-        background: linear-gradient(90deg, #2563eb, #7c3aed, #db2777);
+        background: linear-gradient(90deg, var(--c1), var(--c2), var(--c3));
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
@@ -67,21 +103,23 @@ st.markdown(
 
     /* Section headings */
     .section-title {
-        color: #312e81;
+        color: var(--s1);
         font-size: 30px;
         font-weight: 750;
         margin: 10px 0 15px 0;
     }
 
-    /* Home feature cards */
+    /* Home feature cards (equal height) */
     .feature-card {
         background: rgba(255,255,255,0.92);
         padding: 25px;
         border-radius: 20px;
         border: 1px solid #e2e8f0;
+        border-top: 5px solid var(--c2);
         box-shadow: 0 8px 25px rgba(15,23,42,0.08);
         margin-bottom: 20px;
-        min-height: 145px;
+        height: 200px;
+        overflow: hidden;
         transition: 0.3s;
     }
     .feature-card:hover {
@@ -92,7 +130,7 @@ st.markdown(
     .feature-title {
         font-size: 20px;
         font-weight: 700;
-        color: #172554;
+        color: var(--s1);
         margin-top: 8px;
     }
     .feature-description { font-size: 14px; color: #64748b; }
@@ -102,7 +140,7 @@ st.markdown(
         background: white;
         border-radius: 18px;
         border: 1px solid #e2e8f0;
-        border-left: 6px solid #6366f1;
+        border-left: 6px solid var(--c2);
         box-shadow: 0 8px 25px rgba(15,23,42,0.08);
         padding: 8px 12px;
         margin-top: 15px;
@@ -115,14 +153,14 @@ st.markdown(
         border: none;
         padding: 12px 20px;
         font-weight: 700;
-        background: linear-gradient(90deg, #2563eb, #7c3aed);
+        background: linear-gradient(90deg, var(--c1), var(--c2));
         color: white;
         transition: 0.3s;
     }
     .stButton > button:hover {
         color: white;
         transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(79,70,229,0.30);
+        box-shadow: 0 8px 20px color-mix(in srgb, var(--c2) 35%, transparent);
     }
 
     /* Inputs */
@@ -135,7 +173,7 @@ st.markdown(
         background: rgba(255,255,255,0.75);
         border-radius: 15px;
         padding: 10px;
-        border: 1px dashed #6366f1;
+        border: 1px dashed var(--c2);
     }
 
     /* Footer */
@@ -162,6 +200,7 @@ st.markdown(
 # =========================================================
 # API KEY (Streamlit secrets first, sidebar input as fallback)
 # =========================================================
+st.sidebar.markdown("---")
 st.sidebar.markdown("## 🔐 AI Configuration")
 
 
@@ -183,6 +222,7 @@ if not api_key:
     st.stop()
 
 client = Groq(api_key=api_key)
+st.sidebar.success("✅ AI Connected")
 
 SYSTEM_PROMPT = """You are AI WorkMate.
 You help users with freelancing, online work, job applications, professional
@@ -445,9 +485,9 @@ elif tool == "📚 Document Assistant":
             st.error("No text found in this file (it may be a scanned PDF).")
         else:
             st.success(f"✅ Loaded: {uploaded.name}")
-            c1, c2 = st.columns(2)
-            c1.metric("Characters Extracted", len(text))
-            c2.metric("Document Chunks", len(chunks))
+            c_a, c_b = st.columns(2)
+            c_a.metric("Characters Extracted", len(text))
+            c_b.metric("Document Chunks", len(chunks))
 
             question = st.text_input("💬 Ask a question about your document")
             if st.button("🔎 Search Document"):
