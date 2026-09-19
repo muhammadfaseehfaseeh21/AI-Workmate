@@ -81,6 +81,9 @@ st.markdown(
         color: white !important;
         font-weight: 600;
     }
+    section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] {
+        color: rgba(255,255,255,0.85) !important;
+    }
     section[data-testid="stSidebar"] input {
         color: #0f172a !important;
     }
@@ -205,25 +208,48 @@ st.sidebar.markdown("---")
 st.sidebar.markdown("## 🔐 AI Configuration")
 
 
-def get_api_key():
+FREE_LIMIT = 10  # requests per visitor session when the shared key is used
+
+
+def get_shared_key():
     try:
-        key = st.secrets.get("GROQ_API_KEY", "")
+        return st.secrets.get("GROQ_API_KEY", "")
     except Exception:
-        key = ""
-    if key:
-        return key
-    return st.sidebar.text_input(
-        "Groq API Key", type="password", placeholder="Enter your API key"
+        return ""
+
+
+shared_key = get_shared_key()
+using_shared = False
+
+if shared_key and not st.sidebar.checkbox("🔑 Use my own Groq API key"):
+    api_key = shared_key
+    using_shared = True
+else:
+    api_key = st.sidebar.text_input(
+        "Your Groq API Key",
+        type="password",
+        placeholder="gsk_...",
+        help="Your key is used only in this session and is not saved.",
     )
 
-
-api_key = get_api_key()
 if not api_key:
     st.sidebar.info("Enter your Groq API key to activate AI features.")
     st.stop()
 
 client = Groq(api_key=api_key)
-st.sidebar.success("✅ AI Connected")
+st.session_state.setdefault("uses", 0)
+usage_box = st.sidebar.empty()
+
+
+def show_usage():
+    if using_shared:
+        left = max(FREE_LIMIT - st.session_state.uses, 0)
+        usage_box.success(f"✅ AI Connected — {left} free requests left")
+    else:
+        usage_box.success("✅ AI Connected (your own key)")
+
+
+show_usage()
 
 SYSTEM_PROMPT = """You are AI WorkMate.
 You help users with freelancing, online work, job applications, professional
@@ -249,12 +275,20 @@ def ask_ai(prompt):
 
 def run(prompt):
     """Call the AI, handle errors, show the answer in the styled box."""
+    if using_shared and st.session_state.uses >= FREE_LIMIT:
+        st.warning(
+            "Free limit reached. Tick '🔑 Use my own Groq API key' "
+            "in the sidebar to continue."
+        )
+        return
     with st.spinner("AI is working..."):
         try:
             answer = ask_ai(prompt)
         except Exception as e:
             st.error(f"AI request failed: {e}")
             return
+    st.session_state.uses += 1
+    show_usage()
     with st.container(border=True):
         st.markdown(answer)
 
@@ -316,6 +350,13 @@ tool = st.sidebar.radio(
         "📝 AI Summarizer",
         "✍️ Text Rewriter",
     ],
+)
+
+st.sidebar.markdown("---")
+st.sidebar.caption(
+    "🔒 Privacy: your text and uploaded files are sent to Groq to generate "
+    "answers. This app does not save your files. Please do not upload "
+    "sensitive or confidential documents."
 )
 
 # =========================================================
